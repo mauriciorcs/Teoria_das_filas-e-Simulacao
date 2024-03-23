@@ -132,7 +132,11 @@ ggplot(codigo1, aes(x = taxa, y = tempo_resposta)) +
   ggtitle("Gráfico de Linhas: Tempo de Resposta em relação à Taxa de Chegada")
 ```
 
-### Qual a quantidade mínima de servidores necessários para obter um tempo de resposta médio menor que 1 segundo? Neste caso foi analisado diferentes cenários de simulação. 
+#### Modelo de teoria das filas
+
+#####          No modelo de teoria das filas, o aumento do tempo médio de resposta com o aumento da taxa de chegada é visivel. Isso sugere que o modelo prevê um aumento pronunciado e agudo no tempo médio de resposta à medida que a carga do sistema aumenta.
+
+### Qual a quantidade mínima de servidores necessários para obter um tempo de resposta médio menor que 1 segundo? Neste caso foi analisado diferentes cenários de simulação.
 
 · Taxa de chegada: 9,5 requisições por segundo
 
@@ -244,3 +248,9 @@ ggplot(codigo2, aes(x = numero_servidores, y = tempo_resposta)) +
   ggtitle("Gráfico de Linhas: Tempo de Resposta em relação ao Número de Servidores") +
   scale_x_reverse()
 ```
+
+#### Modelo de teoria das filas
+
+A quantidade mínima de servidores para obter um tempo médio de resposta menor que um segundo foi de 11 servidores. Pode-se obsrvar no gráfico que a partir do 11° servidor, sendo de forma decrescente, podemos ver que o tempo médio de resposta é superior a 1 segundo, isso indica que no 10° servidor o tempo médio de resposta é superior a 1 sergundo
+
+Esses resultados indicam que, para manter um tempo médio de resposta abaixo de 1 segundo, é necessário um número mínimo de servidores para lidar eficientemente com a carga de trabalho do sistema.
