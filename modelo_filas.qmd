@@ -1,0 +1,246 @@
+---
+title: "Relatorio de Analise e Desmpenho de Sistemas" # -----> Título
+subtitle: "Teoria das Filas" # -----> Subtítulo
+author: "Maurício Rodrigues da Silva" # -----> Autoria
+date: "2024-03-23" # -----> Data de publicação
+date-format: short # -----> Formato de data curto: dd/mm/aaaa
+lang: pt # -----> Linguagem: português
+format: 
+  html: 
+    code-fold: true # -----> code-fold: `true` para "ocultar" o bloco de códigos
+    theme: 
+      light: cosmo
+      dark: [cosmo, theme-dark.scss]
+title-block-banner: true # -----> Estilo de banner no topo do documento
+# bibliography: references.bib # -----> Referências do documento
+---
+
+```{r}
+#| echo: false
+#| out.width: "100%"
+#| fig-cap: ""
+
+knitr::include_graphics("img_r.png")
+```
+
+```{r setup}
+library(purrr)
+library(queueing)
+library(ggplot2)
+library(tidyr)
+```
+
+## Como o tempo de resposta das requisições varia ao aumentar a carga do sistema (ou seja, aumentar a taxa de chegada de requisições no sistema)?
+
+· Taxa de chegada: variável
+
+· Tempo de serviço: 0.84 segundo
+
+· Número de servidores: 10
+
+· Tempo de observação: 30 segundos
+
+#### Teste 1
+
+```{r}
+taxa_de_chegada_1 <- 1  # Taxa de chegada média (requisições por segundo)
+taxa_de_servico <- 1/0.84  # Taxa de serviço média por servidor (segundos por requisição)
+n_servidores <- 10  # Número de servidores
+
+# Objeto de entrada para o modelo M/M/c
+mmc_input_1 <- NewInput.MMC(taxa_de_chegada_1, taxa_de_servico, n_servidores)
+
+# Modelo M/M/c
+mmc_model_1 <- QueueingModel(mmc_input_1)
+
+# Relatório do modelo
+Report(mmc_model_1)
+```
+
+#### Teste 2
+
+```{r}
+taxa_de_chegada_5 <- 5  
+taxa_de_servico <- 1/0.84  
+n_servidores <- 10 
+
+mmc_input_2 <- NewInput.MMC(taxa_de_chegada_5, taxa_de_servico, n_servidores)
+
+mmc_model_2 <- QueueingModel(mmc_input_2)
+
+Report(mmc_model_2)
+```
+
+#### Teste 3
+
+```{r}
+taxa_de_chegada_8 <- 8  
+taxa_de_servico <- 1/0.84  
+n_servidores <- 10 
+
+mmc_input_3 <- NewInput.MMC(taxa_de_chegada_8, taxa_de_servico, n_servidores)
+
+mmc_model_3 <- QueueingModel(mmc_input_3)
+
+Report(mmc_model_3)
+```
+
+#### Teste 4
+
+```{r}
+taxa_de_chegada_10 <- 10  
+taxa_de_servico <- 1/0.84  
+n_servidores <- 10 
+
+mmc_input_4 <- NewInput.MMC(taxa_de_chegada_10, taxa_de_servico, n_servidores)
+
+mmc_model_4 <- QueueingModel(mmc_input_4)
+
+Report(mmc_model_4)
+```
+
+### Teste 5
+
+```{r}
+taxa_de_chegada_11 <- 11  
+taxa_de_servico <- 1/0.84  
+n_servidores <- 10 
+
+mmc_input_5 <- NewInput.MMC(taxa_de_chegada_11, taxa_de_servico, n_servidores)
+
+mmc_model_5 <- QueueingModel(mmc_input_5)
+
+Report(mmc_model_5)
+```
+
+#### Variação do tempo de resposta de acordo com da taxa de chegada
+
+```{r}
+codigo1 <- data.frame(
+  taxa = c(taxa_de_chegada_1, taxa_de_chegada_5, taxa_de_chegada_8, taxa_de_chegada_10, taxa_de_chegada_11),
+  tempo_resposta = c(mmc_model_1$W, mmc_model_2$W, mmc_model_3$W, mmc_model_4$W, mmc_model_5$W)
+)
+# write.csv(codigo1, file = "codigo1.csv", row.names = FALSE)
+codigo1
+```
+
+```{r}
+ggplot(codigo1, aes(x = taxa, y = tempo_resposta)) +
+  geom_line(linewidth=1.1) +
+  geom_point(shape = 16, size =2 , color = "black") +
+  labs(x = "Taxa de Chegada", y = "Tempo de Resposta") +
+  ggtitle("Gráfico de Linhas: Tempo de Resposta em relação à Taxa de Chegada")
+```
+
+### Qual a quantidade mínima de servidores necessários para obter um tempo de resposta médio menor que 1 segundo? Neste caso foi analisado diferentes cenários de simulação. 
+
+· Taxa de chegada: 9,5 requisições por segundo
+
+· Tempo de serviço: 0.84 segundo
+
+· Número de servidores: variável
+
+· Tempo de observação: 30 segundos
+
+#### Teste 1
+
+```{r}
+taxa_de_chegada_T1 <- 9.5  
+taxa_de_servico <- 1/0.84  
+n_servidores_1 <- 50 
+
+mmc_input_6 <- NewInput.MMC(taxa_de_chegada_T1, taxa_de_servico, n_servidores_1)
+
+mmc_model_6 <- QueueingModel(mmc_input_6)
+
+Report(mmc_model_6)
+```
+
+#### Teste 2
+
+```{r}
+taxa_de_chegada_T2 <- 9.5  
+taxa_de_servico <- 1/0.84  
+n_servidores_2 <- 30
+
+mmc_input_7 <- NewInput.MMC(taxa_de_chegada_T2, taxa_de_servico, n_servidores_2)
+
+mmc_model_7 <- QueueingModel(mmc_input_7)
+
+Report(mmc_model_7)
+```
+
+#### Teste 3
+
+```{r}
+taxa_de_chegada_T3 <- 9.5  
+taxa_de_servico <- 1/0.84  
+n_servidores_3 <- 20 
+
+mmc_input_8 <- NewInput.MMC(taxa_de_chegada_T3, taxa_de_servico, n_servidores_3)
+
+mmc_model_8 <- QueueingModel(mmc_input_8)
+
+Report(mmc_model_8)
+```
+
+#### Teste 4
+
+```{r}
+taxa_de_chegada_T4 <- 9.5  
+taxa_de_servico <- 1/0.84  
+n_servidores_4 <- 15 
+
+mmc_input_9 <- NewInput.MMC(taxa_de_chegada_T4, taxa_de_servico, n_servidores_4)
+
+mmc_model_9 <- QueueingModel(mmc_input_9)
+
+Report(mmc_model_9)
+```
+
+### Teste 5
+
+```{r}
+taxa_de_chegada_T5 <- 9.5  
+taxa_de_servico <- 1/0.84  
+n_servidores_5 <- 11 
+
+mmc_input_10 <- NewInput.MMC(taxa_de_chegada_T5, taxa_de_servico, n_servidores_5)
+
+mmc_model_10 <- QueueingModel(mmc_input_10)
+
+Report(mmc_model_10)
+```
+
+#### Teste 6
+
+```{r}
+taxa_de_chegada_T6 <- 9.5  
+taxa_de_servico <- 1/0.84  
+n_servidores_6 <- 10 
+
+mmc_input_11 <- NewInput.MMC(taxa_de_chegada_T6, taxa_de_servico, n_servidores_6)
+
+mmc_model_11 <- QueueingModel(mmc_input_11)
+
+Report(mmc_model_11)
+```
+
+```{r}
+codigo2 <- data.frame(
+  numero_servidores = c(n_servidores_1, n_servidores_2, n_servidores_3, n_servidores_4, n_servidores_5, n_servidores_6),
+  tempo_resposta = c(mmc_model_6$W, mmc_model_7$W, mmc_model_8$W, mmc_model_8$W, mmc_model_10$W, mmc_model_11$W)
+)
+# write.csv(codigo2, file = "codigo2.csv", row.names = FALSE)
+codigo2
+```
+
+```{r}
+ggplot(codigo2, aes(x = numero_servidores, y = tempo_resposta)) +
+  geom_line(linewidth=1.1) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
+  geom_point(shape = 16, size = 2, color = "black") +
+  labs(x = "Número de Servidores", y = "Tempo de Resposta") +
+  ggtitle("Gráfico de Linhas: Tempo de Resposta em relação ao Número de Servidores") +
+  scale_x_reverse()
+```

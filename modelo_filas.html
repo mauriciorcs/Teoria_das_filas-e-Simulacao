@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt" xml:lang="pt"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Maurício Rodrigues da Silva">
+
+<title>Relatorio de Analise e Desmpenho de Sistemas</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="modelo_filas_files/libs/clipboard/clipboard.min.js"></script>
+<script src="modelo_filas_files/libs/quarto-html/quarto.js"></script>
+<script src="modelo_filas_files/libs/quarto-html/popper.min.js"></script>
+<script src="modelo_filas_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="modelo_filas_files/libs/quarto-html/anchor.min.js"></script>
+<link href="modelo_filas_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="modelo_filas_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="modelo_filas_files/libs/quarto-html/quarto-syntax-highlighting-dark.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<script src="modelo_filas_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="modelo_filas_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="modelo_filas_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="modelo_filas_files/libs/bootstrap/bootstrap-dark.min.css" rel="prefetch" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Relatorio de Analise e Desmpenho de Sistemas</h1>
+            <p class="subtitle lead">Teoria das Filas</p>
+                      </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Autor</div>
+      <div class="quarto-title-meta-contents">
+               <p>Maurício Rodrigues da Silva </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Data de Publicação</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">23/03/2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+<div class="cell">
+<div class="cell-output-display">
+<p><img src="img_r.png" class="img-fluid" style="width:100.0%"></p>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(purrr)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(queueing)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<section id="como-o-tempo-de-resposta-das-requisições-varia-ao-aumentar-a-carga-do-sistema-ou-seja-aumentar-a-taxa-de-chegada-de-requisições-no-sistema" class="level2">
+<h2 class="anchored" data-anchor-id="como-o-tempo-de-resposta-das-requisições-varia-ao-aumentar-a-carga-do-sistema-ou-seja-aumentar-a-taxa-de-chegada-de-requisições-no-sistema">Como o tempo de resposta das requisições varia ao aumentar a carga do sistema (ou seja, aumentar a taxa de chegada de requisições no sistema)?</h2>
+<p>· Taxa de chegada: variável</p>
+<p>· Tempo de serviço: 0.84 segundo</p>
+<p>· Número de servidores: 10</p>
+<p>· Tempo de observação: 30 segundos</p>
+<section id="teste-1" class="level4">
+<h4 class="anchored" data-anchor-id="teste-1">Teste 1</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_1 <span class="ot">&lt;-</span> <span class="dv">1</span>  <span class="co"># Taxa de chegada média (requisições por segundo)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  <span class="co"># Taxa de serviço média por servidor (segundos por requisição)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>n_servidores <span class="ot">&lt;-</span> <span class="dv">10</span>  <span class="co"># Número de servidores</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Objeto de entrada para o modelo M/M/c</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>mmc_input_1 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_1, taxa_de_servico, n_servidores)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Modelo M/M/c</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>mmc_model_1 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_1)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Relatório do modelo</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_1)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 1, mu: 1.19047619047619, c: 10, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.4317105
+The traffic intensity is: 0.84
+The server use is: 0.084
+The mean number of clients in the system is: 0.840000002083103
+The mean number of clients in the queue is: 2.08310327441136e-09
+The mean number of clients in the server is: 0.84
+The mean time spend in the system is: 0.840000002083103
+The mean time spend in the queue is: 2.08310327441136e-09
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.0917030567685589
+The throughput is: 1</code></pre>
+</div>
+</div>
+</section>
+<section id="teste-2" class="level4">
+<h4 class="anchored" data-anchor-id="teste-2">Teste 2</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_5 <span class="ot">&lt;-</span> <span class="dv">5</span>  </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>n_servidores <span class="ot">&lt;-</span> <span class="dv">10</span> </span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>mmc_input_2 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_5, taxa_de_servico, n_servidores)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>mmc_model_2 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_2)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_2)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 5, mu: 1.19047619047619, c: 10, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.01497996
+The traffic intensity is: 4.2
+The server use is: 0.42
+The mean number of clients in the system is: 4.20880306528114
+The mean number of clients in the queue is: 0.00880306528114235
+The mean number of clients in the server is: 4.2
+The mean time spend in the system is: 0.841760613056229
+The mean time spend in the queue is: 0.00176061305622847
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.144827586206897
+The throughput is: 5</code></pre>
+</div>
+</div>
+</section>
+<section id="teste-3" class="level4">
+<h4 class="anchored" data-anchor-id="teste-3">Teste 3</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_8 <span class="ot">&lt;-</span> <span class="dv">8</span>  </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>n_servidores <span class="ot">&lt;-</span> <span class="dv">10</span> </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>mmc_input_3 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_8, taxa_de_servico, n_servidores)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>mmc_model_3 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_3)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_3)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 8, mu: 1.19047619047619, c: 10, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.001151181
+The traffic intensity is: 6.72
+The server use is: 0.672
+The mean number of clients in the system is: 7.09213024011418
+The mean number of clients in the queue is: 0.372130240114177
+The mean number of clients in the server is: 6.72
+The mean time spend in the system is: 0.886516280014272
+The mean time spend in the queue is: 0.0465162800142721
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.25609756097561
+The throughput is: 8</code></pre>
+</div>
+</div>
+</section>
+<section id="teste-4" class="level4">
+<h4 class="anchored" data-anchor-id="teste-4">Teste 4</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_10 <span class="ot">&lt;-</span> <span class="dv">10</span>  </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>n_servidores <span class="ot">&lt;-</span> <span class="dv">10</span> </span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>mmc_input_4 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_10, taxa_de_servico, n_servidores)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>mmc_model_4 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_4)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_4)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 10, mu: 1.19047619047619, c: 10, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.0001673985
+The traffic intensity is: 8.4
+The server use is: 0.84
+The mean number of clients in the system is: 11.0474066380139
+The mean number of clients in the queue is: 2.64740663801391
+The mean number of clients in the server is: 8.4
+The mean time spend in the system is: 1.10474066380139
+The mean time spend in the queue is: 0.264740663801391
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.525
+The throughput is: 10</code></pre>
+</div>
+</div>
+</section>
+<section id="teste-5" class="level3">
+<h3 class="anchored" data-anchor-id="teste-5">Teste 5</h3>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_11 <span class="ot">&lt;-</span> <span class="dv">11</span>  </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>n_servidores <span class="ot">&lt;-</span> <span class="dv">10</span> </span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>mmc_input_5 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_11, taxa_de_servico, n_servidores)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>mmc_model_5 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_5)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_5)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 11, mu: 1.19047619047619, c: 10, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+4.509652e-05
+The traffic intensity is: 9.24
+The server use is: 0.924
+The mean number of clients in the system is: 18.2587112979737
+The mean number of clients in the queue is: 9.01871129797365
+The mean number of clients in the server is: 9.24
+The mean time spend in the system is: 1.65988284527033
+The mean time spend in the queue is: 0.819882845270332
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 1.10526315789474
+The throughput is: 11</code></pre>
+</div>
+</div>
+<section id="variação-do-tempo-de-resposta-de-acordo-com-da-taxa-de-chegada" class="level4">
+<h4 class="anchored" data-anchor-id="variação-do-tempo-de-resposta-de-acordo-com-da-taxa-de-chegada">Variação do tempo de resposta de acordo com da taxa de chegada</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>codigo1 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">taxa =</span> <span class="fu">c</span>(taxa_de_chegada_1, taxa_de_chegada_5, taxa_de_chegada_8, taxa_de_chegada_10, taxa_de_chegada_11),</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">tempo_resposta =</span> <span class="fu">c</span>(mmc_model_1<span class="sc">$</span>W, mmc_model_2<span class="sc">$</span>W, mmc_model_3<span class="sc">$</span>W, mmc_model_4<span class="sc">$</span>W, mmc_model_5<span class="sc">$</span>W)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># write.csv(codigo1, file = "codigo1.csv", row.names = FALSE)</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>codigo1</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  taxa tempo_resposta
+1    1      0.8400000
+2    5      0.8417606
+3    8      0.8865163
+4   10      1.1047407
+5   11      1.6598828</code></pre>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(codigo1, <span class="fu">aes</span>(<span class="at">x =</span> taxa, <span class="at">y =</span> tempo_resposta)) <span class="sc">+</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth=</span><span class="fl">1.1</span>) <span class="sc">+</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">shape =</span> <span class="dv">16</span>, <span class="at">size =</span><span class="dv">2</span> , <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Taxa de Chegada"</span>, <span class="at">y =</span> <span class="st">"Tempo de Resposta"</span>) <span class="sc">+</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Gráfico de Linhas: Tempo de Resposta em relação à Taxa de Chegada"</span>)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="modelo_filas_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="qual-a-quantidade-mínima-de-servidores-necessários-para-obter-um-tempo-de-resposta-médio-menor-que-1-segundo-neste-caso-foi-analisado-diferentes-cenários-de-simulação." class="level3">
+<h3 class="anchored" data-anchor-id="qual-a-quantidade-mínima-de-servidores-necessários-para-obter-um-tempo-de-resposta-médio-menor-que-1-segundo-neste-caso-foi-analisado-diferentes-cenários-de-simulação.">Qual a quantidade mínima de servidores necessários para obter um tempo de resposta médio menor que 1 segundo? Neste caso foi analisado diferentes cenários de simulação.</h3>
+<p>· Taxa de chegada: 9,5 requisições por segundo</p>
+<p>· Tempo de serviço: 0.84 segundo</p>
+<p>· Número de servidores: variável</p>
+<p>· Tempo de observação: 30 segundos</p>
+<section id="teste-1-1" class="level4">
+<h4 class="anchored" data-anchor-id="teste-1-1">Teste 1</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_T1 <span class="ot">&lt;-</span> <span class="fl">9.5</span>  </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>n_servidores_1 <span class="ot">&lt;-</span> <span class="dv">50</span> </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>mmc_input_6 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_T1, taxa_de_servico, n_servidores_1)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>mmc_model_6 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_6)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_6)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 9.5, mu: 1.19047619047619, c: 50, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.0003422394
+The traffic intensity is: 7.98
+The server use is: 0.1596
+The mean number of clients in the system is: 7.98
+The mean number of clients in the queue is: 3.20228904045918e-24
+The mean number of clients in the server is: 7.98
+The mean time spend in the system is: 0.84
+The mean time spend in the queue is: 3.3708305689044e-25
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.019990480723465
+The throughput is: 9.5</code></pre>
+</div>
+</div>
+</section>
+<section id="teste-2-1" class="level4">
+<h4 class="anchored" data-anchor-id="teste-2-1">Teste 2</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_T2 <span class="ot">&lt;-</span> <span class="fl">9.5</span>  </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>n_servidores_2 <span class="ot">&lt;-</span> <span class="dv">30</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>mmc_input_7 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_T2, taxa_de_servico, n_servidores_2)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>mmc_model_7 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_7)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_7)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 9.5, mu: 1.19047619047619, c: 30, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.0003422394
+The traffic intensity is: 7.98
+The server use is: 0.266
+The mean number of clients in the system is: 7.98000000073155
+The mean number of clients in the queue is: 7.31553709428844e-10
+The mean number of clients in the server is: 7.98
+The mean time spend in the system is: 0.840000000077006
+The mean time spend in the queue is: 7.70056536240888e-11
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.0381471389645777
+The throughput is: 9.5</code></pre>
+</div>
+</div>
+</section>
+<section id="teste-3-1" class="level4">
+<h4 class="anchored" data-anchor-id="teste-3-1">Teste 3</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_T3 <span class="ot">&lt;-</span> <span class="fl">9.5</span>  </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>n_servidores_3 <span class="ot">&lt;-</span> <span class="dv">20</span> </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>mmc_input_8 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_T3, taxa_de_servico, n_servidores_3)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>mmc_model_8 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_8)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_8)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 9.5, mu: 1.19047619047619, c: 20, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.0003422355
+The traffic intensity is: 7.98
+The server use is: 0.399
+The mean number of clients in the system is: 7.98017040493488
+The mean number of clients in the queue is: 0.000170404934876504
+The mean number of clients in the server is: 7.98
+The mean time spend in the system is: 0.840017937361566
+The mean time spend in the queue is: 1.79373615659478e-05
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.0698835274542429
+The throughput is: 9.5</code></pre>
+</div>
+</div>
+</section>
+<section id="teste-4-1" class="level4">
+<h4 class="anchored" data-anchor-id="teste-4-1">Teste 4</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_T4 <span class="ot">&lt;-</span> <span class="fl">9.5</span>  </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>n_servidores_4 <span class="ot">&lt;-</span> <span class="dv">15</span> </span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>mmc_input_9 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_T4, taxa_de_servico, n_servidores_4)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>mmc_model_9 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_9)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_9)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 9.5, mu: 1.19047619047619, c: 15, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.0003415462
+The traffic intensity is: 7.98
+The server use is: 0.532
+The mean number of clients in the system is: 8.00149874433939
+The mean number of clients in the queue is: 0.0214987443393857
+The mean number of clients in the server is: 7.98
+The mean time spend in the system is: 0.842263025719935
+The mean time spend in the queue is: 0.00226302571993534
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.11965811965812
+The throughput is: 9.5</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="teste-5-1" class="level3">
+<h3 class="anchored" data-anchor-id="teste-5-1">Teste 5</h3>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_T5 <span class="ot">&lt;-</span> <span class="fl">9.5</span>  </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>n_servidores_5 <span class="ot">&lt;-</span> <span class="dv">11</span> </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>mmc_input_10 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_T5, taxa_de_servico, n_servidores_5)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>mmc_model_10 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_10)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_10)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 9.5, mu: 1.19047619047619, c: 11, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.00031723
+The traffic intensity is: 7.98
+The server use is: 0.725454545454545
+The mean number of clients in the system is: 8.61919306344862
+The mean number of clients in the queue is: 0.639193063448623
+The mean number of clients in the server is: 7.98
+The mean time spend in the system is: 0.907283480363013
+The mean time spend in the queue is: 0.067283480363013
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.278145695364238
+The throughput is: 9.5</code></pre>
+</div>
+</div>
+<section id="teste-6" class="level4">
+<h4 class="anchored" data-anchor-id="teste-6">Teste 6</h4>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>taxa_de_chegada_T6 <span class="ot">&lt;-</span> <span class="fl">9.5</span>  </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>taxa_de_servico <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span><span class="fl">0.84</span>  </span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>n_servidores_6 <span class="ot">&lt;-</span> <span class="dv">10</span> </span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>mmc_input_11 <span class="ot">&lt;-</span> <span class="fu">NewInput.MMC</span>(taxa_de_chegada_T6, taxa_de_servico, n_servidores_6)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>mmc_model_11 <span class="ot">&lt;-</span> <span class="fu">QueueingModel</span>(mmc_input_11)</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="fu">Report</span>(mmc_model_11)</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>The inputs of the model M/M/c are:
+lambda: 9.5, mu: 1.19047619047619, c: 10, n: 0, method: Exact
+
+The outputs of the model M/M/c are:
+
+The probability (p0, p1, ..., pn) of the n = 0 clients in the system are:
+0.0002833037
+The traffic intensity is: 7.98
+The server use is: 0.798
+The mean number of clients in the system is: 9.57888877137247
+The mean number of clients in the queue is: 1.59888877137247
+The mean number of clients in the server is: 7.98
+The mean time spend in the system is: 1.0083040811971
+The mean time spend in the queue is: 0.168304081197102
+The mean time spend in the server is: 0.84
+The mean time spend in the queue when there is queue is: 0.415841584158416
+The throughput is: 9.5</code></pre>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>codigo2 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">numero_servidores =</span> <span class="fu">c</span>(n_servidores_1, n_servidores_2, n_servidores_3, n_servidores_4, n_servidores_5, n_servidores_6),</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">tempo_resposta =</span> <span class="fu">c</span>(mmc_model_6<span class="sc">$</span>W, mmc_model_7<span class="sc">$</span>W, mmc_model_8<span class="sc">$</span>W, mmc_model_8<span class="sc">$</span>W, mmc_model_10<span class="sc">$</span>W, mmc_model_11<span class="sc">$</span>W)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co"># write.csv(codigo2, file = "codigo2.csv", row.names = FALSE)</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>codigo2</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>  numero_servidores tempo_resposta
+1                50      0.8400000
+2                30      0.8400000
+3                20      0.8400179
+4                15      0.8400179
+5                11      0.9072835
+6                10      1.0083041</code></pre>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(codigo2, <span class="fu">aes</span>(<span class="at">x =</span> numero_servidores, <span class="at">y =</span> tempo_resposta)) <span class="sc">+</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth=</span><span class="fl">1.1</span>) <span class="sc">+</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">1</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">shape =</span> <span class="dv">16</span>, <span class="at">size =</span> <span class="dv">2</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Número de Servidores"</span>, <span class="at">y =</span> <span class="st">"Tempo de Resposta"</span>) <span class="sc">+</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Gráfico de Linhas: Tempo de Resposta em relação ao Número de Servidores"</span>) <span class="sc">+</span></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_reverse</span>()</span></code><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<p><img src="modelo_filas_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const disableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'prefetch';
+    }
+  }
+  const enableStylesheet = (stylesheets) => {
+    for (let i=0; i < stylesheets.length; i++) {
+      const stylesheet = stylesheets[i];
+      stylesheet.rel = 'stylesheet';
+    }
+  }
+  const manageTransitions = (selector, allowTransitions) => {
+    const els = window.document.querySelectorAll(selector);
+    for (let i=0; i < els.length; i++) {
+      const el = els[i];
+      if (allowTransitions) {
+        el.classList.remove('notransition');
+      } else {
+        el.classList.add('notransition');
+      }
+    }
+  }
+  const toggleColorMode = (alternate) => {
+    // Switch the stylesheets
+    const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+    manageTransitions('#quarto-margin-sidebar .nav-link', false);
+    if (alternate) {
+      enableStylesheet(alternateStylesheets);
+      for (const sheetNode of alternateStylesheets) {
+        if (sheetNode.id === "quarto-bootstrap") {
+          toggleBodyColorMode(sheetNode);
+        }
+      }
+    } else {
+      disableStylesheet(alternateStylesheets);
+      toggleBodyColorPrimary();
+    }
+    manageTransitions('#quarto-margin-sidebar .nav-link', true);
+    // Switch the toggles
+    const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+    for (let i=0; i < toggles.length; i++) {
+      const toggle = toggles[i];
+      if (toggle) {
+        if (alternate) {
+          toggle.classList.add("alternate");     
+        } else {
+          toggle.classList.remove("alternate");
+        }
+      }
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455)
+    if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+      manageTransitions("body", false);
+      window.scrollTo(0, 1);
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        manageTransitions("body", true);
+      }, 40);  
+    }
+  }
+  const isFileUrl = () => { 
+    return window.location.protocol === 'file:';
+  }
+  const hasAlternateSentinel = () => {  
+    let styleSentinel = getColorSchemeSentinel();
+    if (styleSentinel !== null) {
+      return styleSentinel === "alternate";
+    } else {
+      return false;
+    }
+  }
+  const setStyleSentinel = (alternate) => {
+    const value = alternate ? "alternate" : "default";
+    if (!isFileUrl()) {
+      window.localStorage.setItem("quarto-color-scheme", value);
+    } else {
+      localAlternateSentinel = value;
+    }
+  }
+  const getColorSchemeSentinel = () => {
+    if (!isFileUrl()) {
+      const storageValue = window.localStorage.getItem("quarto-color-scheme");
+      return storageValue != null ? storageValue : localAlternateSentinel;
+    } else {
+      return localAlternateSentinel;
+    }
+  }
+  let localAlternateSentinel = 'default';
+  // Dark / light mode switch
+  window.quartoToggleColorScheme = () => {
+    // Read the current dark / light value 
+    let toAlternate = !hasAlternateSentinel();
+    toggleColorMode(toAlternate);
+    setStyleSentinel(toAlternate);
+  };
+  // Ensure there is a toggle, if there isn't float one in the top right
+  if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+    const a = window.document.createElement('a');
+    a.classList.add('top-right');
+    a.classList.add('quarto-color-scheme-toggle');
+    a.href = "";
+    a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+    const i = window.document.createElement("i");
+    i.classList.add('bi');
+    a.appendChild(i);
+    window.document.body.appendChild(a);
+  }
+  // Switch to dark mode if need be
+  if (hasAlternateSentinel()) {
+    toggleColorMode(true);
+  } else {
+    toggleColorMode(false);
+  }
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copiada");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copiada");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
